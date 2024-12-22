@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uji Semua Jenis XSS dan HTML Injection</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            color: #007bff;
+        }
+        .input-area {
+            margin-bottom: 20px;
+        }
+        .input-area label {
+            font-size: 18px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .result.fail {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .output-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        .output-container h3 {
+            font-size: 22px;
+            color: #007bff;
+        }
+        .output-container .output {
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-size: 16px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Uji Semua Jenis XSS dan HTML Injection</h1>
+    <p>Masukkan payload XSS atau HTML Injection dan klik "Uji Payload" untuk menguji apakah payload tersebut berhasil dijalankan atau disisipkan.</p>
+
+    <div class="input-area">
+        <label for="payload">Masukkan Payload XSS atau HTML Injection:</label>
+        <textarea id="payload" placeholder="Contoh: &lt;script&gt;alert(1)&lt;/script&gt;"></textarea>
+    </div>
+
+    <button onclick="testPayload()">Uji Payload</button>
+
+    <div class="result" id="result">
+        <h3>Hasil Pengujian:</h3>
+        <p>Silakan masukkan payload dan tekan tombol untuk menguji hasilnya.</p>
+    </div>
+
+    <div class="output-container">
+        <h3>Hasil Eksekusi Payload:</h3>
+        <div id="output" class="output"></div>
+    </div>
+
+</div>
+
+<script>
+    // Payload test function
+    function testPayload() {
+        const payload = document.getElementById('payload').value.trim();
+        const resultDiv = document.getElementById('result');
+        const outputDiv = document.getElementById('output');
+
+        // Reset result message and output
+        resultDiv.innerHTML = '<h3>Hasil Pengujian:</h3>';
+        outputDiv.innerHTML = '';
+
+        // Check if payload is empty
+        if (!payload) {
+            resultDiv.innerHTML += '<p>Silakan masukkan payload XSS atau HTML Injection terlebih dahulu.</p>';
+            resultDiv.classList.remove('success', 'fail');
+            return;
+        }
+
+        // Decode the payload (HTML entity decoding, URL decoding, etc.)
+        const decodedPayload = decodeHtml(payload);
+        const decodedUrlPayload = decodeURIComponent(decodedPayload);
+        
+        // Create a div to test the payload
+        const testDiv = document.createElement('div');
+        testDiv.innerHTML = decodedUrlPayload;
+
+        // Add the div to the page for testing (simulates a reflected XSS attack or HTML injection)
+        document.body.appendChild(testDiv);
+
+        // Checking for common XSS payloads and HTML Injection patterns
+        const successIndicators = ['alert(1)', 'onerror', 'onload', 'onfocus', 'javascript:', '<img', '<a href', '<script'];
+        let isSuccess = false;
+
+        // Check for reflected XSS or HTML Injection (direct input in DOM or URL params)
+        for (let indicator of successIndicators) {
+            if (testDiv.innerHTML.includes(indicator)) {
+                isSuccess = true;
+                break;
+            }
+        }
+
+        // Display results based on whether the payload is successful or not
+        if (isSuccess) {
+            resultDiv.innerHTML += '<p><strong>Payload Berhasil!</strong> Payload berhasil dijalankan di sisi klien.</p>';
+            resultDiv.classList.add('success');
+            outputDiv.innerHTML = `<pre>${decodedUrlPayload}</pre>`;
+        } else {
+            resultDiv.innerHTML += '<p><strong>Payload Gagal!</strong> Tidak ada hasil yang dieksekusi di sisi klien.</p>';
+            resultDiv.classList.add('fail');
+        }
+
+        // Clean up after test
+        document.body.removeChild(testDiv);
+    }
+
+    // Decode HTML entities
+    function decodeHtml(html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    }
+</script>
+
+</body>
+</html>
